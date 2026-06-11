@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>ExamSeat CSP — Generate Seating</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Syne:wght@700;800&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet"/>
+  <link rel="stylesheet" href="/static/css/seating.css"/>
+</head>
+<body>
+
+<header class="header">
+  <div class="header-inner">
+    <div class="logo">
+      <a href="/" class="back-btn">← Home</a>
+      <span class="logo-icon">◈</span>
+      <div>
+        <div class="logo-title">ExamSeat<span class="acc">CSP</span></div>
+        <div class="logo-sub">Multi-Room Constraint Satisfaction · AI-2002 · FAST NUCES</div>
+      </div>
+    </div>
+  </div>
+</header>
+
+<main class="main-layout">
+
+  <!-- ── LEFT PANEL ──────────────────────────────────── -->
+  <aside class="left-panel">
+
+    <!-- Upload -->
+    <section class="card">
+      <div class="card-header"><span class="step-badge">01</span><h2>Student List</h2></div>
+      <div class="upload-area" id="upload-area">
+        <input type="file" id="excel-file" accept=".xlsx,.xls,.csv" hidden/>
+        <div class="upload-icon">⇪</div>
+        <div class="upload-text">
+          <strong>Click or drag &amp; drop</strong>
+          <span>.xlsx / .xls / .csv</span>
+        </div>
+      </div>
+      <div id="file-name" class="file-name">No file selected</div>
+      <div class="format-box">
+        <div class="format-title">Required columns:</div>
+        <div class="format-cols">
+          <code>Name</code><code>Roll No</code><code>Course</code>
+          <code>Section</code><code>Batch</code><code>Department</code>
+        </div>
+      </div>
+    </section>
+
+    <!-- Config -->
+    <section class="card">
+      <div class="card-header"><span class="step-badge">02</span><h2>Hall Config</h2></div>
+      <div class="config-grid">
+        <label><span>Rooms</span><input type="number" id="input-rooms" value="30" min="1" max="50"/></label>
+        <label><span>Rows</span><input type="number" id="input-rows" value="5" min="1" max="20"/></label>
+        <label><span>Cols</span><input type="number" id="input-cols" value="10" min="1" max="20"/></label>
+      </div>
+      <div id="cap-hint" class="cap-hint">Capacity: 30 × 50 = 1500 seats</div>
+      <div class="constraint-box">
+        <div class="cb-title">Active Constraints (8-dir adjacency)</div>
+        <div class="cb-row"><span class="cdot" style="background:#00d9b8"></span>Same Course + Section → blocked</div>
+        <div class="cb-row"><span class="cdot" style="background:#3d8bff"></span>Same Course + Batch → blocked</div>
+        <div class="cb-row"><span class="cdot" style="background:#ffa657"></span>Same Name → blocked</div>
+      </div>
+    </section>
+
+    <!-- Run -->
+    <section class="card">
+      <div class="card-header"><span class="step-badge">03</span><h2>Generate</h2></div>
+      <div class="algo-tags">
+        <span class="atag">MRV Heuristic</span>
+        <span class="atag">LCV Heuristic</span>
+        <span class="atag">Forward Checking</span>
+        <span class="atag">Backtracking</span>
+        <span class="atag green">Python Backend</span>
+      </div>
+      <div class="btn-col">
+        <button id="btn-generate" class="btn-primary" disabled>▶ &nbsp;Generate Seating</button>
+        <button id="btn-reset" class="btn-danger" disabled>↺ &nbsp;Reset</button>
+      </div>
+    </section>
+
+    <!-- Status -->
+    <section class="card">
+      <div class="card-header"><span class="step-badge">04</span><h2>Status</h2></div>
+      <div class="status-row">
+        <span class="sdot" id="sdot"></span>
+        <span id="status-text" class="stext idle">Upload Excel to begin</span>
+      </div>
+      <div class="prog-bar"><div id="prog-fill" class="prog-fill"></div></div>
+      <div id="stat-cards" class="stat-cards"></div>
+    </section>
+
+    <!-- Legend -->
+    <section class="card">
+      <div class="card-header"><span class="step-badge">◈</span><h2>Legend</h2></div>
+      <div id="legend" class="legend"></div>
+    </section>
+
+  </aside>
+
+  <!-- ── RIGHT PANEL ─────────────────────────────────── -->
+  <div class="right-panel">
+
+    <!-- Room tabs -->
+    <section class="card" id="tabs-card" style="display:none">
+      <div class="card-header"><span class="step-badge">⊞</span><h2>Rooms</h2><span id="rooms-solved-label" class="solved-label"></span></div>
+      <div id="room-tabs" class="room-tabs"></div>
+    </section>
+
+    <!-- Grid -->
+    <section class="card grid-card">
+      <div class="card-header">
+        <span class="step-badge">⊟</span>
+        <h2 id="grid-title">Examination Hall</h2>
+        <span class="grid-hint">Hover seat for details</span>
+      </div>
+      <div id="room-info-bar" class="room-info-bar"></div>
+      <div id="grid-wrap" class="grid-wrap">
+        <div class="empty-state">
+          Upload students → configure → click <strong>Generate Seating</strong>
+        </div>
+      </div>
+    </section>
+
+    <!-- Table preview -->
+    <section class="card">
+      <div class="card-header"><span class="step-badge">≡</span><h2>Student Preview</h2></div>
+      <div id="student-preview" class="tbl-scroll"><div class="empty-state">No students loaded</div></div>
+    </section>
+
+    <!-- Log -->
+    <section class="card">
+      <div class="card-header"><span class="step-badge">⌘</span><h2>Log</h2></div>
+      <div id="log" class="log-panel"></div>
+    </section>
+
+  </div>
+</main>
+
+<script src="/static/js/seating.js"></script>
+</body>
+</html>
