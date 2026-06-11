@@ -1,8 +1,6 @@
 # ExamSeat CSP — University Exam Seating System
 ## AI-2002 Semester Project | FAST NUCES Karachi | BCS-6J
 
-**Team:** Ahmed Bin Ali (23K-0632) · Abid Zafar (23K-0835) · Sanjna (23K-2022)
-**Supervisor:** Sir Abdullah Yaqoob
 
 ---
 
@@ -48,7 +46,7 @@ exam-seating-pro/
 Your student Excel file should have these columns (names flexible):
 | Name | Roll No | Course | Section | Batch | Department |
 |------|---------|--------|---------|-------|------------|
-| Ahmed Ali | 23K-0001 | CS301 | BCS-6J | 2023 | CS |
+| sam | 23K-0001 | CS301 | BCS-6J | 2023 | CS |
 
 ---
 
